@@ -17,20 +17,24 @@ function handler(req, res){
     });
 };
 
-var id = 0;
-io.sockets.on('connection', function(socket){
-    id = id+1;
-    socket.set('id', id);
+io.set('authorization', function(handshakeData, cb){
+    var query = handshakeData.query;
 
+    if(!query.username){
+        return cb('parameters invalid', false);
+    }
+
+    handshakeData.username = query.username;
+
+    cb(null, true);
+});
+
+io.sockets.on('connection', function(socket){
     socket.on('position', function(position){
-        socket.get('id', function(err, id){
-            io.sockets.emit('position', {id: id, position: position});
-        });
+        io.sockets.emit('position', {id: socket.handshake.username, position: position});
     });
 
     socket.on('disconnect', function(){
-        socket.get('id', function(err, id){
-            io.sockets.emit('position', {id: id, position: null});
-        });
+        io.sockets.emit('position', {id: socket.handshake.username, position: null});
     });
 });
