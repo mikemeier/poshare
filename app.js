@@ -19,7 +19,8 @@ function handler(req, res){
 
 var id = 0;
 io.sockets.on('connection', function(socket){
-    socket.set('id', id++);
+    id = id+1;
+    socket.set('id', id);
 
     socket.on('position', function(position){
         socket.get('id', function(err, id){
