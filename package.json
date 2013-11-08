@@ -1,7 +1,6 @@
 {
     "dependencies": {
         "socket.io": "*",
-        "randomstring": "*",
-        "http": "*"
+        "randomstring": "*"
     }
 }
