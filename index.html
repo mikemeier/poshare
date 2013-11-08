@@ -24,7 +24,7 @@
 
             var users = {};
 
-            var socket = io.connect('http://localhost:3000');
+            var socket = io.connect('http://localhost:8080');
             socket.on('position', function(data){
                 var id = data.id;
 
@@ -43,8 +43,15 @@
                 }
 
                 var position = data.position;
-                var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                var path = users[id]['polygon'].getPath();
+                var polygon = users[id]['polygon'];
+                if(position == null){
+                    polygon.setMap(null);
+                    delete users[id];
+                    return;
+                }
+
+                var latLng = new google.maps.LatLng(position.lat, position.lng);
+                var path = polygon.getPath();
                 path.push(latLng);
 
                 /*for(var i = 0; i < markers[id].length; i++){
@@ -67,11 +74,13 @@
                         navigator.geolocation.getCurrentPosition(function(position){
                             console.log('current position:');
                             console.log(position);
+                            var lat = position.coords.latitude;
+                            var lng = position.coords.longitude;
                             if(setCenter == true){
                                 console.log('setCenter to current position');
-                                map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+                                map.setCenter(new google.maps.LatLng(lat, lng));
                             }
-                            socket.emit('position', position);
+                            socket.emit('position', {lat: lat, lng: lng});
                         }, function(error){
                             alert('GetCurrentPositionErrorCode '+ error.code +': '+ error.message);
                         }, {
