@@ -15,7 +15,7 @@
     <body>
         <div id="map"></div>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
-        <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+        <script src="http://localhost:9000/socket.io/socket.io.js"></script>
         <script>
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 16,
@@ -24,7 +24,7 @@
 
             var users = {};
 
-            var socket = io.connect('http://localhost:8080');
+            var socket = io.connect('http://localhost:9000');
             socket.on('position', function(data){
                 var id = data.id;
 
@@ -32,13 +32,19 @@
                     users[id] = {
                         polygon: new google.maps.Polyline({
                             path: [],
-                            geodesic: true,
-                            strokeColor: '#FF0000',
-                            strokeOpacity: 1.0,
-                            strokeWeight: 2,
+                            icons: [{
+                                icon: {
+                                    path: 'M 0,-1 0,1',
+                                    strokeOpacity: 1,
+                                    scale: 4
+                                },
+                                offset: '0',
+                                repeat: '20px'
+                            }],
+                            strokeOpacity: 0,
                             map: map
                         }),
-                        markers: []
+                        marker: null
                     };
                 }
 
@@ -54,18 +60,15 @@
                 var path = polygon.getPath();
                 path.push(latLng);
 
-                /*for(var i = 0; i < markers[id].length; i++){
-                 var marker = markers[id][i];
-                 marker.setIcon('http://www.google.ch/bg_google.png');
-                 }
+                if(users[id]['marker'] != null){
+                    users[id]['marker'].setMap(null);
+                }
 
-                 var marker = new google.maps.Marker({
-                 position: latLng,
-                 title: id,
-                 map: map
-                 });
-
-                 users[id]['markers'].push(marker);*/
+                users[id]['marker'] = new google.maps.Marker({
+                    position: latLng,
+                    icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld='+ id +'|FF776B|000000',
+                    map: map
+                });
             });
 
             if(navigator.geolocation){
