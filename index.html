@@ -15,7 +15,7 @@
     <body>
         <div id="map"></div>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
-        <script src="http://localhost:9000/socket.io/socket.io.js"></script>
+        <script>document.write('<script src="http://'+ window.location.hostname +':9000/socket.io/socket.io.js"><\/script>')</script>
         <script>
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 16,
@@ -24,7 +24,7 @@
 
             var users = {};
 
-            var socket = io.connect('http://localhost:9000?username='+ encodeURI(prompt("Username")));
+            var socket = io.connect('http://'+ window.location.hostname +':9000?username='+ encodeURI(prompt("Username")));
             socket.on('position', function(data){
                 var id = data.id;
 
