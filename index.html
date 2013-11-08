@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Poshare</title>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <style>
+            html, body, #map {
+                height: 100%;
+                margin: 0px;
+                padding: 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+        <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+        <script>
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 16,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+
+            var users = {};
+
+            var socket = io.connect('http://localhost:3000');
+            socket.on('position', function(data){
+                var id = data.id;
+
+                if(typeof users[id] != "object"){
+                    users[id] = {
+                        polygon: new google.maps.Polyline({
+                            path: [],
+                            geodesic: true,
+                            strokeColor: '#FF0000',
+                            strokeOpacity: 1.0,
+                            strokeWeight: 2,
+                            map: map
+                        }),
+                        markers: []
+                    };
+                }
+
+                var position = data.position;
+                var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                var path = users[id]['polygon'].getPath();
+                path.push(latLng);
+
+                /*for(var i = 0; i < markers[id].length; i++){
+                 var marker = markers[id][i];
+                 marker.setIcon('http://www.google.ch/bg_google.png');
+                 }
+
+                 var marker = new google.maps.Marker({
+                 position: latLng,
+                 title: id,
+                 map: map
+                 });
+
+                 users[id]['markers'].push(marker);*/
+            });
+
+            if(navigator.geolocation){
+                var emitPosition = function(setCenter){
+                    return function(){
+                        navigator.geolocation.getCurrentPosition(function(position){
+                            console.log('current position:');
+                            console.log(position);
+                            if(setCenter == true){
+                                console.log('setCenter to current position');
+                                map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+                            }
+                            socket.emit('position', position);
+                        }, function(error){
+                            alert('GetCurrentPositionErrorCode '+ error.code +': '+ error.message);
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 5000
+                        });
+                    };
+                };
+                emitPosition(true)();
+                window.setInterval(emitPosition(false), 10000);
+            }else{
+                alert('Geolocation not supported');
+            }
+        </script>
+    </body>
+</html>
