@@ -2,8 +2,10 @@ var app = require('http').createServer(handler);
 var io = require('socket.io').listen(app);
 var randomstring = require('randomstring');
 var fs = require('fs');
+var webRTC = require('webrtc.io');
 
 app.listen(9000);
+webRTC.listen(9001);
 
 function handler(req, res){
     fs.readFile(__dirname +'/index.html', function(err, data){
