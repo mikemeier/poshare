@@ -1,9 +1,8 @@
 (function(){
-    var video = document.getElementById('local');
     navigator.webkitGetUserMedia(
         {audio: true, video: false},
         function(stream){
-            video.src = webkitURL.createObjectURL(stream);
+
         },
         function(){
             console.log(arguments);

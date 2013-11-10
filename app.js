@@ -2,16 +2,28 @@ var app = require('http').createServer(handler);
 var io = require('socket.io').listen(app);
 var randomstring = require('randomstring');
 var fs = require('fs');
+var url = require('url');
+var path = require('path');
 var webRTC = require('webrtc.io');
 
 app.listen(9000);
 webRTC.listen(9001);
 
 function handler(req, res){
-    fs.readFile(__dirname +'/index.html', function(err, data){
+
+    var file = null;
+    try {
+        file = path.normalize(decodeURI(url.parse(req.url).pathname));
+    }catch(e){}
+
+    if(file == null || file == '/'){
+        file = '/index.html';
+    }
+
+    fs.readFile(__dirname + file, function(err, data){
         if(err){
             res.writeHead(500);
-            res.end('Error loading index.html');
+            res.end('Error loading '+ file);
             return;
         }
         res.writeHead(200);
