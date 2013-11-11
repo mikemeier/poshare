@@ -3,6 +3,7 @@
         "socket.io": "*",
         "randomstring": "*",
         "webrtc.io": "*",
+        "googleapis": "*",
         "forever": "*"
     }
 }
