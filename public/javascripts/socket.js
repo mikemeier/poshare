@@ -1,14 +1,17 @@
-(function(){
-    var map = new google.maps.Map(document.getElementById('map'), {
+(function(hostname, port, mapContainer){
+    var map = new google.maps.Map(mapContainer, {
         zoom: 16,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     });
 
     var users = {};
+    var socket = io.connect('http://'+ hostname +':'+ port);
 
-    var socket = io.connect('http://'+ window.location.hostname +':9000?username='+ encodeURI(prompt("Username")));
+    socket.on('position', function(err, data){
+        if(err){
+            return alert(err);
+        }
 
-    socket.on('position', function(data){
         var id = data.id;
 
         if(typeof users[id] != "object"){
@@ -35,8 +38,7 @@
         var polygon = users[id]['polygon'];
         if(position == null){
             polygon.setMap(null);
-            delete users[id];
-            return;
+            return delete users[id];
         }
 
         var latLng = new google.maps.LatLng(position.lat, position.lng);
@@ -49,7 +51,7 @@
 
         users[id]['marker'] = new google.maps.Marker({
             position: latLng,
-            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld='+ id +'|FF776B|000000',
+            icon: data.image+'&sz=25',
             map: map
         });
     });
@@ -58,12 +60,9 @@
         var emitPosition = function(setCenter){
             return function(){
                 navigator.geolocation.getCurrentPosition(function(position){
-                    console.log('current position:');
-                    console.log(position);
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
                     if(setCenter == true){
-                        console.log('setCenter to current position');
                         map.setCenter(new google.maps.LatLng(lat, lng));
                     }
                     socket.emit('position', {lat: lat, lng: lng});
@@ -81,4 +80,4 @@
     }else{
         alert('Geolocation not supported');
     }
-}());
+}(hostname, port, document.getElementById('map')));

@@ -1,4 +1,6 @@
 (function(){
+    return;
+
     navigator.webkitGetUserMedia(
         {audio: true, video: false},
         function(stream){
@@ -9,9 +11,7 @@
         }
     );
 
-    return;
-
-    rtc.connect('ws://'+ window.location.hostname +':9001');
+    rtc.connect('ws://'+ window.location.hostname +':{{rtc_port}}');
 
     rtc.createStream({"video": false, "audio":true}, function(stream){
         // get local stream for manipulation

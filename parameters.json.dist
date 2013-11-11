@@ -1,8 +1,23 @@
 {
-    "socket": {
+    "app": {
+        "version": "0.0.1"
+    },
+    "session": {
+        "key": "sessionKey"
+    },
+    "cookie": {
+        "secret": "cookieSecret"
+    },
+    "http": {
+        "hostname": "localhost",
         "port": 9000
     },
     "rtc": {
+        "hostname": "localhost",
         "port": 9001
+    },
+    "oauth": {
+        "key": "key",
+        "secret": "secret"
     }
 }
