@@ -8,9 +8,13 @@
     var socket = io.connect('http://'+ hostname +':'+ port);
     var infoWindow = new google.maps.InfoWindow();
 
+    google.maps.event.addListener(map, "click", function(){
+        infoWindow.close();
+    });
+
     socket.on('start', function(userData){
-    console.log('welcome');
-    console.log(userData);
+        console.log('welcome');
+        console.log(userData);
 
         if(navigator.geolocation){
             var watchId = navigator.geolocation.watchPosition(function(position){
@@ -25,7 +29,6 @@
                 alert('Position error: '+ error.code +': '+ error.message);
             }, {
                 enableHighAccuracy: true,
-                timeout: 10000,
                 maximumAge: 0
             });
         }else{
@@ -42,15 +45,6 @@
         var position = data.position;
         var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
-        var openInfoWindow = function(marker){
-            var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
-            infoWindow.setContent(content + 'loading...');
-            infoWindow.open(map, marker);
-            $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
-                infoWindow.setContent(content + data.results[0].formatted_address);
-            }, 'json');
-        };
-
         var id = data.id;
         if(typeof users[id] != "object"){
             var newMarker = new google.maps.Marker({
@@ -59,7 +53,12 @@
             });
 
             google.maps.event.addListener(newMarker, "click", function(){
-                openInfoWindow();
+                var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
+                infoWindow.setContent(content + 'loading...');
+                infoWindow.open(map, marker);
+                $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
+                    infoWindow.setContent(content + data.results[0].formatted_address);
+                }, 'json');
             });
 
             users[id] = {
@@ -81,12 +80,7 @@
             };
         }
 
-        var polygon = users[id]['polygon'];
-        var marker = users[id]['marker'];
-
-        var path = polygon.getPath();
-        path.push(latLng);
-
-        marker.setPosition(latLng);
+        users[id]['polygon'].getPath().push(latLng);
+        users[id]['marker'].setPosition(latLng);
     });
 }(hostname, port, document.getElementById('map')));
