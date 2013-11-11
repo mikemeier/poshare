@@ -70,10 +70,13 @@ function setup(){
                     .plus.people.get({userId: 'me'})
                     .withAuthClient(oauthClient)
                     .execute(function(err, data){
-                        var id = crypto.createHash('sha512').update(socket.handshake.sessionId).digest("hex");
                         if(err){
+                            socket.emit('error', 'G+ error: '+ err.message);
                             return socket.disconnect();
                         }
+
+                        var id = crypto.createHash('sha512').update(socket.handshake.sessionId).digest("hex");
+
                         socket.emit('start', data);
                         socket.on('position', helper(function(err, session, position){
                             io.sockets.emit('position', err, {

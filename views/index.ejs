@@ -8,6 +8,10 @@
     </head>
     <body>
         <div id="map"></div>
+        <div id="overlay">
+            <ul id="messages"></ul>
+        </div>
+
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
         <script src="/socket.io/socket.io.js"></script>
@@ -17,6 +21,7 @@
             var port = "<%= port %>";
         </script>
 
+        <script src="/javascripts/dateformat.js"></script>
         <script src="/javascripts/socket.js"></script>
         <script src="/javascripts/rtc.js"></script>
     </body>

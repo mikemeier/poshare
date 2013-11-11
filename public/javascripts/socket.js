@@ -1,7 +1,26 @@
 (function(hostname, port, mapContainer){
+    var messages = $('#messages');
+
+    function scrollOutputToBottom(){
+        messages.scrollTop(messages[0].scrollHeight);
+    }
+
+    function isOutputScrollOnBottom(){
+        return messages[0].scrollHeight - messages.scrollTop() == messages.outerHeight();
+    }
+
+    function addLine(line){
+        var doScroll = isOutputScrollOnBottom();
+        messages.append(line);
+        if(doScroll == true){
+            scrollOutputToBottom();
+        }
+    }
+
     var map = new google.maps.Map(mapContainer, {
         zoom: 16,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        disableDefaultUI: true
     });
 
     var users = {};
@@ -13,12 +32,8 @@
     });
 
     socket.on('start', function(userData){
-        console.log('welcome');
-        console.log(userData);
-
         if(navigator.geolocation){
             var watchId = navigator.geolocation.watchPosition(function(position){
-                console.log(position);
                 var lat = position.coords.latitude;
                 var lng = position.coords.longitude;
                 if(typeof map.getCenter() != "object"){
@@ -36,14 +51,25 @@
         }
     });
 
+    socket.on('error', function(err){
+        alert(err);
+    });
+
     socket.on('position', function(err, data){
         if(err){
-            console.log(err);
             return alert(err);
         }
 
         var position = data.position;
         var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        var openMarker = function(){
+            var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
+            infoWindow.setContent(content + 'loading...');
+            infoWindow.open(map, newMarker);
+            $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
+                infoWindow.setContent(content + data.results[0].formatted_address);
+            }, 'json');
+        };
 
         var id = data.id;
         if(typeof users[id] != "object"){
@@ -52,14 +78,7 @@
                 icon: data.image+'&sz=25'
             });
 
-            google.maps.event.addListener(newMarker, "click", function(){
-                var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
-                infoWindow.setContent(content + 'loading...');
-                infoWindow.open(map, newMarker);
-                $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
-                    infoWindow.setContent(content + data.results[0].formatted_address);
-                }, 'json');
-            });
+            google.maps.event.addListener(newMarker, "click", openMarker);
 
             users[id] = {
                 polygon: new google.maps.Polyline({
@@ -82,5 +101,18 @@
 
         users[id]['polygon'].getPath().push(latLng);
         users[id]['marker'].setPosition(latLng);
+
+        var text = $(
+            '<li>' +
+                new Date(position.timestamp).format('yyyy-mm-dd HH:MM:ss') + ':<br>' +
+                '<b>'+ data.name + '</b> at lat '+ latLng.lat() + ' / lng ' + latLng.lng() +
+            '</li>');
+
+        text.on('click', function(){
+            map.setCenter(users[id]['marker'].getPosition());
+            openMarker();
+        });
+
+        addLine(text);
     });
 }(hostname, port, document.getElementById('map')));
