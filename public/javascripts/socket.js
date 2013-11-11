@@ -6,10 +6,11 @@
 
     var users = {};
     var socket = io.connect('http://'+ hostname +':'+ port);
+    var infoWindow = new google.maps.InfoWindow();
 
     socket.on('start', function(userData){
-        console.log('welcome');
-        console.log(userData);
+    console.log('welcome');
+    console.log(userData);
 
         if(navigator.geolocation){
             var watchId = navigator.geolocation.watchPosition(function(position){
@@ -38,8 +39,29 @@
             return alert(err);
         }
 
+        var position = data.position;
+        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+        var openInfoWindow = function(marker){
+            var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng();
+            infoWindow.setContent(content + 'loading...');
+            infoWindow.open(map, marker);
+            $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
+                infoWindow.setContent(content + data.results[0].formatted_address);
+            }, 'json');
+        };
+
         var id = data.id;
         if(typeof users[id] != "object"){
+            var newMarker = new google.maps.Marker({
+                map: map,
+                icon: data.image+'&sz=25'
+            });
+
+            google.maps.event.addListener(newMarker, "click", function(){
+                openInfoWindow(newMarker);
+            });
+
             users[id] = {
                 polygon: new google.maps.Polyline({
                     path: [],
@@ -55,18 +77,12 @@
                     strokeOpacity: 0,
                     map: map
                 }),
-                marker: new google.maps.Marker({
-                    map: map,
-                    icon: data.image+'&sz=25'
-                })
+                marker: newMarker
             };
         }
 
         var polygon = users[id]['polygon'];
         var marker = users[id]['marker'];
-
-        var position = data.position;
-        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
         var path = polygon.getPath();
         path.push(latLng);
