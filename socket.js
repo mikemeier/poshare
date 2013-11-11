@@ -1,7 +1,7 @@
 var cookie = require('cookie');
 var connect = require('connect');
 var googleapis = require('googleapis');
-var randomstring = require("randomstring");
+var crypto = require('crypto');
 
 var oauth = require('./oauth');
 var parameters = require('./parameters');
@@ -46,17 +46,12 @@ function setup(){
 
             data.sessionId = sessionId;
             data.oauth = session.oauth;
-            data.id = randomstring.generate();
 
             return accept(null, true);
         });
     });
 
     io.sockets.on('connection', function(socket){
-        socket.on('disconnect', function(){
-            io.sockets.emit('position', null, {id: socket.handshake.id, position: null});
-        });
-
         var helper = socketSessionHelper(socket);
 
         var oauthClient = oauth.createInstance();
@@ -67,17 +62,32 @@ function setup(){
         googleapis
             .discover('plus', 'v1')
             .execute(function(err, client){
+                if(err){
+                    return socket.disconnect();
+                }
+
                 client
                     .plus.people.get({userId: 'me'})
                     .withAuthClient(oauthClient)
                     .execute(function(err, data){
+                        var id = crypto.createHash('sha512').update(data.id).digest("hex");
                         if(err){
-                            return socket.emit('position', err);
+                            return socket.disconnect();
                         }
+                        socket.emit('start', data);
                         socket.on('position', helper(function(err, session, position){
-                            io.sockets.emit('position', err, {id: socket.handshake.id, image: data.image.url, name: data.displayName, position: position});
+                            io.sockets.emit('position', err, {
+                                id: id,
+                                image: data.image.url,
+                                name: data.displayName,
+                                position: position
+                            });
                         }));
+                        socket.on('disconnect', function(){
+                            io.sockets.emit('offline', null, {id: id});
+                        });
                     });
+
             });
     });
 }

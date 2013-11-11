@@ -7,13 +7,38 @@
     var users = {};
     var socket = io.connect('http://'+ hostname +':'+ port);
 
+    socket.on('start', function(userData){
+        console.log('welcome');
+        console.log(userData);
+
+        if(navigator.geolocation){
+            var watchId = navigator.geolocation.watchPosition(function(position){
+                console.log(position);
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                if(typeof map.getCenter() != "object"){
+                    map.setCenter(new google.maps.LatLng(lat, lng));
+                }
+                socket.emit('position', position);
+            }, function(error){
+                alert('Position error: '+ error.code +': '+ error.message);
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }else{
+            alert('Geolocation not supported');
+        }
+    });
+
     socket.on('position', function(err, data){
         if(err){
+            console.log(err);
             return alert(err);
         }
 
         var id = data.id;
-
         if(typeof users[id] != "object"){
             users[id] = {
                 polygon: new google.maps.Polyline({
@@ -30,54 +55,22 @@
                     strokeOpacity: 0,
                     map: map
                 }),
-                marker: null
+                marker: new google.maps.Marker({
+                    map: map,
+                    icon: data.image+'&sz=25'
+                })
             };
         }
 
-        var position = data.position;
         var polygon = users[id]['polygon'];
-        if(position == null){
-            polygon.setMap(null);
-            return delete users[id];
-        }
+        var marker = users[id]['marker'];
 
-        var latLng = new google.maps.LatLng(position.lat, position.lng);
+        var position = data.position;
+        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
         var path = polygon.getPath();
         path.push(latLng);
 
-        if(users[id]['marker'] != null){
-            users[id]['marker'].setMap(null);
-        }
-
-        users[id]['marker'] = new google.maps.Marker({
-            position: latLng,
-            icon: data.image+'&sz=25',
-            map: map
-        });
+        marker.setPosition(latLng);
     });
-
-    if(navigator.geolocation){
-        var emitPosition = function(setCenter){
-            return function(){
-                navigator.geolocation.getCurrentPosition(function(position){
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    if(setCenter == true){
-                        map.setCenter(new google.maps.LatLng(lat, lng));
-                    }
-                    socket.emit('position', {lat: lat, lng: lng});
-                }, function(error){
-                    alert('GetCurrentPositionErrorCode '+ error.code +': '+ error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 5000
-                });
-            };
-        };
-        emitPosition(true)();
-        window.setInterval(emitPosition(false), 10000);
-    }else{
-        alert('Geolocation not supported');
-    }
 }(hostname, port, document.getElementById('map')));
