@@ -1,12 +1,13 @@
 (function(hostname, port, mapContainer){
+    var overlay = $('#overlay');
     var messages = $('#messages');
 
     function scrollOutputToBottom(){
-        messages.scrollTop(messages[0].scrollHeight);
+        overlay.scrollTop(overlay[0].scrollHeight);
     }
 
     function isOutputScrollOnBottom(){
-        return messages[0].scrollHeight - messages.scrollTop() == messages.outerHeight();
+        return overlay[0].scrollHeight - overlay.scrollTop() == overlay.outerHeight();
     }
 
     function addLine(line){
