@@ -43,7 +43,7 @@
         var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
         var openInfoWindow = function(marker){
-            var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng();
+            var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
             infoWindow.setContent(content + 'loading...');
             infoWindow.open(map, marker);
             $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
@@ -59,7 +59,7 @@
             });
 
             google.maps.event.addListener(newMarker, "click", function(){
-                openInfoWindow(newMarker);
+                openInfoWindow();
             });
 
             users[id] = {
