@@ -55,7 +55,7 @@
             google.maps.event.addListener(newMarker, "click", function(){
                 var content = '<b>'+ data.name +'</b><br>Lat: '+ latLng.lat() +' / Lng: '+ latLng.lng() +'<br>';
                 infoWindow.setContent(content + 'loading...');
-                infoWindow.open(map, marker);
+                infoWindow.open(map, newMarker);
                 $.get('http://maps.googleapis.com/maps/api/geocode/json?latlng='+ latLng.lat()+','+latLng.lng() +'&sensor=false', function(data){
                     infoWindow.setContent(content + data.results[0].formatted_address);
                 }, 'json');
