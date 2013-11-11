@@ -70,7 +70,7 @@ function setup(){
                     .plus.people.get({userId: 'me'})
                     .withAuthClient(oauthClient)
                     .execute(function(err, data){
-                        var id = crypto.createHash('sha512').update(data.id).digest("hex");
+                        var id = crypto.createHash('sha512').update(socket.handshake.sessionId).digest("hex");
                         if(err){
                             return socket.disconnect();
                         }
