@@ -106,7 +106,7 @@
         var text = $(
             '<li>' +
                 new Date(position.timestamp).format('yyyy-mm-dd HH:MM:ss') + ':<br>' +
-                '<b>'+ data.name + '</b> at lat '+ latLng.lat() + ' / lng ' + latLng.lng() +
+                '<b>'+ data.name + '</b> at lat '+ latLng.lat().toFixed(2) + ' / lng ' + latLng.lng().toFixed(2) +
             '</li>');
 
         text.on('click', function(){
